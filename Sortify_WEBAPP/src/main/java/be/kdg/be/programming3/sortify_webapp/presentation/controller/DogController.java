@@ -1,8 +1,5 @@
 package be.kdg.be.programming3.sortify_webapp.presentation.controller;
 
-import be.kdg.programming3.dogcloud.domain.Dog;
-import be.kdg.programming3.dogcloud.domain.DogType;
-import be.kdg.programming3.dogcloud.service.DogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
