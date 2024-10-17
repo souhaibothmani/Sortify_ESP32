@@ -1,23 +1,48 @@
 package be.kdg.be.programming3.sortify_webapp.domain;
 
-import java.text.DateFormat;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 
+@Entity
 public class Trash {
-    private TrashType trashType;
-    private LocalDateTime timeThrown;
-    private double weight;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    //private String trashName;
 
-    public Trash(TrashType trashType, LocalDateTime timeThrown, double weight) {
-        this.trashType = trashType;
-        this.timeThrown = timeThrown;
-        this.weight = weight;
+    private LocalDateTime time;
+
+    private String material;
+
+    // Constructors, Getters, and Setters
+
+    public Trash() { }
+
+    public Trash(LocalDateTime time, String material) {
+        this.time = time;
+        this.material = material;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public LocalDateTime getTimeThrown() {
+        return time;
+    }
+
+    public void setTimeThrown(LocalDateTime time) {
+        this.time = time;
+    }
+
+    public String getMaterial() {
+        return material;
+    }
+
+    public void setMaterial(String material) {
+        this.material = material;
     }
 }

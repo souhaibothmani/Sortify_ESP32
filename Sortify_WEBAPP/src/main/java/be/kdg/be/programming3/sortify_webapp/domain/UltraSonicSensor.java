@@ -11,9 +11,13 @@ public class UltraSonicSensor {
         this.isOpen = isOpen;
     }
 
-
+    // Getters and setters
     public LocalDateTime getLocalDateTime() {
         return localDateTime;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.localDateTime = localDateTime;
     }
 
     public boolean isOpen() {
@@ -24,4 +28,3 @@ public class UltraSonicSensor {
         isOpen = open;
     }
 }
-

@@ -1,42 +1,42 @@
 package be.kdg.be.programming3.sortify_webapp.service;
 
 import be.kdg.be.programming3.sortify_webapp.domain.Trash;
-import be.kdg.be.programming3.sortify_webapp.domain.TrashType;
 import be.kdg.be.programming3.sortify_webapp.domain.UltraSonicSensor;
 import be.kdg.be.programming3.sortify_webapp.repository.TrashRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class TrashServiceImpl implements TrashService {
     private Logger logger = LoggerFactory.getLogger(TrashServiceImpl.class);
-    private TrashRepository trashRepository;
-    private ArduinoCommunicationService arduinoCommunicationService; // injection
+    private final TrashRepository trashRepository;
 
-    public TrashServiceImpl(TrashRepository trashRepository, ArduinoCommunicationService arduinoCommunicationService) {
-        logger.info("Creating TrashRepository");
+    // Commenting out the ArduinoCommunicationService as we don't want to use it now
+    // private final ArduinoCommunicationService arduinoCommunicationService;
+
+    public TrashServiceImpl(TrashRepository trashRepository) {
         this.trashRepository = trashRepository;
-        this.arduinoCommunicationService = arduinoCommunicationService;
+        // this.arduinoCommunicationService = arduinoCommunicationService;
     }
 
     @Override
     public List<Trash> getTrashes() {
-        logger.info("Getting trashes...");
-        return trashRepository.readTrashes();
+        logger.info("Fetching all trashes from the database...");
+        return trashRepository.findAll(); // Using JPA's findAll()
     }
 
     @Override
-    public Trash addTrash(TrashType trashType, LocalDateTime timeThrown, double weight) {
-        logger.info("Adding trash with type {} at time {} of weight {}", trashType, timeThrown, weight);
-        return trashRepository.createTrash(new Trash(trashType, timeThrown, weight));
+    public Trash addTrash(Trash trash) {
+        logger.info("Saving a new trash record to the database...");
+        return trashRepository.save(trash); // Using JPA's save()
     }
 
+    // Temporarily returning a static UltraSonicSensor value
+    @Override
     public UltraSonicSensor checkBinStatus() {
-        boolean isOpen = arduinoCommunicationService.isBinOpen();
-        return new UltraSonicSensor(isOpen);
+        return new UltraSonicSensor(false); // Return a default closed bin status
     }
 }
