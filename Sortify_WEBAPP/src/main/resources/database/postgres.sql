@@ -16,4 +16,7 @@ VALUES ('2024-10-16 14:00', 'Plastic'),
 SELECT *
 FROM trash;
 
+ALTER TABLE trash
+DROP COLUMN time_thrown;
+
 

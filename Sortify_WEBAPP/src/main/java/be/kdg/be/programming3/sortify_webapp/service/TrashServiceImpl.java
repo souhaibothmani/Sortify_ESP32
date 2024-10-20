@@ -14,12 +14,8 @@ public class TrashServiceImpl implements TrashService {
     private Logger logger = LoggerFactory.getLogger(TrashServiceImpl.class);
     private final TrashRepository trashRepository;
 
-    // Commenting out the ArduinoCommunicationService as we don't want to use it now
-    // private final ArduinoCommunicationService arduinoCommunicationService;
-
     public TrashServiceImpl(TrashRepository trashRepository) {
         this.trashRepository = trashRepository;
-        // this.arduinoCommunicationService = arduinoCommunicationService;
     }
 
     @Override
@@ -31,8 +27,9 @@ public class TrashServiceImpl implements TrashService {
     @Override
     public Trash addTrash(Trash trash) {
         logger.info("Saving a new trash record to the database...");
-        return trashRepository.save(trash); // Using JPA's save()
+        return trashRepository.save(trash);  // Using JPA's save()
     }
+
 
     // Temporarily returning a static UltraSonicSensor value
     @Override
