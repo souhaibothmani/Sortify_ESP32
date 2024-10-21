@@ -1,7 +1,7 @@
 CREATE TABLE trash (
                        id SERIAL PRIMARY KEY,
                        time TIMESTAMP NOT NULL,
-                       material VARCHAR(50) NOT NULL
+                       material VARCHAR(50)
 );
 
 --Sample data
@@ -16,7 +16,7 @@ VALUES ('2024-10-16 14:00', 'Plastic'),
 SELECT *
 FROM trash;
 
-ALTER TABLE trash
-DROP COLUMN time_thrown;
+
+DROP TABLE trash;
 
 

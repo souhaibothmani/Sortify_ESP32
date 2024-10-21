@@ -34,17 +34,26 @@ public class TrashController {
 
         return "bin-status";  // Return Thymeleaf template
     }
-
     @PostMapping("/bin-open")
-    public ResponseEntity<String> binOpened(@RequestBody Map<String, String> payload) {
-        String time = payload.get("time");  // Get the timestamp from ESP32
+    public ResponseEntity<String> binOpened() {
+        try {
+            // Create a new Trash object
+            Trash trash = new Trash(LocalDateTime.now(), null);  // You can modify the material later if needed
+            trashService.addTrash(trash);  // Save the trash to the database
 
-        // Create a new Trash object with time and null material
-        Trash trash = new Trash(LocalDateTime.now(), null);  // Assuming time is now, replace with actual if needed
-        trashService.addTrash(trash);  // Save the trash to the database
+            // Return success response
+            return ResponseEntity.ok("Bin open data saved successfully!");
+        } catch (Exception e) {
+            // Log error details, including the message
+            System.err.println("Error processing bin open data: " + e.getMessage());
+            e.printStackTrace();
 
-        return ResponseEntity.ok("Bin open event saved");
+            // Return an error response
+            return ResponseEntity.status(500).body("Error processing bin open data.");
+        }
     }
+
+
 }
 
 

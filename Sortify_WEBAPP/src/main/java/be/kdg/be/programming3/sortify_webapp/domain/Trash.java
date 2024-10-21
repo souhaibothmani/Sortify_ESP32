@@ -30,11 +30,11 @@ public class Trash {
         this.id = id;
     }
 
-    public LocalDateTime getTimeThrown() {
+    public LocalDateTime getTime() {
         return time;
     }
 
-    public void setTimeThrown(LocalDateTime time) {
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 
