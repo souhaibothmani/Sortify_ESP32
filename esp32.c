@@ -1,69 +1,74 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <curl/curl.h>
-#include <wiringPi.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
-// Ultrasonic sensor pins (GPIO numbers may differ)
-const int trigPin = 5;  // GPIO pin for TRIG
-const int echoPin = 18; // GPIO pin for ECHO
+// Wi-Fi credentials
+const char* ssid = "KdG-iDev";  // Replace with your WiFi SSID
+const char* password = "nn3YQQL4PK9CnydA";  // Replace with your WiFi password
 
 // Server URL (your Spring Boot endpoint)
-const char* serverName = "http://10.134.178.161/bin-open";
+const String serverName = "http://10.134.178.161/bin-open";  // Replace with your server IP and endpoint
+
+// Ultrasonic sensor pins
+const int trigPin = 5;  // GPIO pin for TRIG
+const int echoPin = 18; // GPIO pin for ECHO
 
 // Variables for distance measurement
 long duration;
 int distance;
 
-// Function to measure distance using ultrasonic sensor
-int measureDistance() {
-    digitalWrite(trigPin, LOW);
-    usleep(2);  // delay 2 microseconds
-    digitalWrite(trigPin, HIGH);
-    usleep(10); // delay 10 microseconds
-    digitalWrite(trigPin, LOW);
+void setup() {
+  Serial.begin(115200);
 
-    // Measure pulse duration on echoPin
-    duration = pulseIn(echoPin, HIGH);
-    return duration * 0.034 / 2;
+  // Setup ultrasonic sensor pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi!");
 }
 
-// Function to send HTTP request using libcurl
-void sendHTTPRequest() {
-    CURL* curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, serverName);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{}");
+void loop() {
+  // Measure distance
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
 
-        CURLcode res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-        }
-        curl_easy_cleanup(curl);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  // Check if bin is open (distance < 10 cm)
+  if (distance > 0 && distance < 10) {
+    Serial.println("Bin is open!");
+
+    // Send HTTP request to the server
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      http.begin(serverName);
+      http.addHeader("Content-Type", "application/json");
+
+      // Send a basic notification (no payload needed)
+      int httpResponseCode = http.POST("{}");
+
+      if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("Server response: " + response);
+      } else {
+        Serial.println("Error sending data: " + String(httpResponseCode));
+      }
+
+      http.end();
+      delay(5000);  // Adjust the delay as needed
+    } else {
+      Serial.println("WiFi disconnected!");
+      delay(5000);  // Adjust the delay as needed
     }
-}
+  }
 
-int main() {
-    // Initialize wiringPi library (specific to Raspberry Pi)
-    wiringPiSetupGpio();
-
-    // Setup ultrasonic sensor pins
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
-
-    while (1) {
-        // Measure distance
-        distance = measureDistance();
-
-        // Check if bin is open (distance < 10 cm)
-        if (distance > 0 && distance < 10) {
-            printf("Bin is open!\n");
-            sendHTTPRequest();
-            sleep(5); // Delay 5 seconds
-        }
-
-        sleep(1);  // Adjust main loop delay as needed
-    }
-
-    return 0;
 }
