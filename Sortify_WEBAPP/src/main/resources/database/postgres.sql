@@ -13,10 +13,22 @@ VALUES ('2024-10-16 14:00', 'Plastic'),
 
 
 --Retrieve data
-SELECT *
-FROM trash;
+SELECT * FROM trash;
+
 
 
 DROP TABLE trash;
+
+CREATE TABLE users (
+                       id SERIAL PRIMARY KEY,
+                       username VARCHAR(50) UNIQUE NOT NULL,
+                       password VARCHAR(255) NOT NULL, -- Store hashed passwords
+                       role VARCHAR(50) DEFAULT 'USER'
+);
+
+-- Sample data
+INSERT INTO users (username, password, role)
+VALUES ('admin', 'hashed_password_here', 'ADMIN'),
+       ('user', 'hashed_password_here', 'USER');
 
 
