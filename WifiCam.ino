@@ -58,7 +58,7 @@ void setup() {
     delay(1000);
 
     // Initialize ESC for the brushless motor
-    ESC.attach(18, 1000, 2000); // Pin 18 for ESC control
+    ESC.attach(14, 1000, 2000); // Pin 18 for ESC control
     ESC.writeMicroseconds(1500); // Set neutral position (ESC initialization)
     delay(3000);  // Wait for ESC initialization (3 seconds)
 
