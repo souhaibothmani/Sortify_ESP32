@@ -62,3 +62,9 @@ The servo motor opens and closes the bin.
 
 The first image captured by the camera is discarded and not sent to the server.
 Ensure that the server is up and running and can handle POST requests with image data.
+## Additional Information
+The repository includes a ZIP file containing the necessary libraries for the ESP32.
+#### To use these libraries:
+Unzip the file.
+Place the unzipped libraries in Documents -> Arduino -> libraries.
+All coding and development for this project were done using the Arduino IDE.
