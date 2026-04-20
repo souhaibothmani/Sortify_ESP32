@@ -1,70 +1,89 @@
-# Integration_3_Team_11_Sortify_esp32
+# Sortify — ESP32 Firmware
 
-This project uses an ESP32-CAM to detect objects using an ultrasonic sensor, capture images, and communicate with a server to process the images and classify materials. The system uses a servo motor to open and close a bin based on the material detected. Additionally, a brushless motor (ESC) is used to control the sorting mechanism based on the material type.
-## Features
+Firmware for the embedded half of **Sortify**, an automated waste-sorting bin. An ESP32-CAM watches the lid with an ultrasonic sensor, captures an image when something approaches, ships it over Wi-Fi to a classifier, and actuates the bin mechanics based on the response.
 
-Ultrasonic Sensor: Detects objects within a defined distance range and triggers actions based on proximity.
-Camera: Captures images for material classification.
-Wi-Fi Connectivity: Connects to a Wi-Fi network to communicate with a server.
-Servo Motor: Controls the opening and closing of the bin based on sensor input.
-Brushless Motor (ESC): Moves the bin to different sectors based on the material detected (paper/cardboard, plastic, glass).
-Material Classification: Sends images to the server, receives a material classification response, and controls the system based on the result.
-## Requirements
+Built with the **Arduino IDE** (ESP32 core). Developed for the Integration 3 course — Team 11.
 
-#### Hardware:
-ESP32-CAM module
-Ultrasonic sensor (HC-SR04)
-Servo motor
-Brushless motor with ESC (Electronic Speed Controller)
-#### Software:
-Arduino IDE with ESP32 support
-Libraries:
-WiFi.h
-HTTPClient.h
-ESP32Servo.h
-ArduinoJson.h
+---
+
+## How it fits together
+
+```
+       ┌───────────────┐   image    ┌──────────────────────┐
+       │  ESP32-CAM    │──────────▶ │  Flask + ResNet50    │
+       │  (this repo)  │◀────────── │  (Sortify_predictive)│
+       └───────┬───────┘  "plastic" └──────────────────────┘
+               │
+               ▼
+   Ultrasonic  Servo (lid)   Brushless ESC (sector)
+```
+
+- The ultrasonic sensor triggers on objects inside `0–10 cm`.
+- On trigger, the bin lid opens, the camera captures a frame, and the image is POSTed to the classifier.
+- The classifier replies with a material label (`paper/cardboard`, `plastic`, or `glass`).
+- The brushless ESC rotates the inner sector to the matching compartment; the servo then closes the lid.
+
+---
+
+## Hardware
+
+| Component | Pin / Note |
+|-----------|------------|
+| ESP32-CAM (AiThinker module) | camera pins set via `cfg.setPins(pins::AiThinker)` |
+| Ultrasonic HC-SR04 | `trigPin = 12`, `echoPin = 13` |
+| Servo motor (lid) | `servoPin = 15` |
+| Brushless motor + ESC (sector) | pin `14` |
+
+Camera resolution is set to **640×480** for a tight capture-to-response loop.
+
+---
+
+## Files
+
+| File | Role |
+|------|------|
+| `WifiCam.ino` | Arduino entry point — `setup()` (Wi-Fi, camera, servo/ESC, ultrasonic) and `loop()` (sense → capture → classify → actuate). |
+| `WifiCam.hpp` | Shared declarations for the Wi-Fi / camera code. |
+| `handlers.cpp` | HTTP handlers / request helpers used by the main sketch. |
+| `esp32cam-main.zip` | Bundled library sources — unzip into `Documents/Arduino/libraries/`. |
+
+---
+
 ## Setup
 
-#### Wi-Fi Configuration
-In the code, replace the WIFI_SSID and WIFI_PASS values with your Wi-Fi credentials:
-static const char* WIFI_SSID = "YOUR_SSID";
-static const char* WIFI_PASS = "YOUR_PASSWORD";
-#### Camera Configuration
-Ensure that the camera is connected correctly and configured with the following:
-cfg.setPins(pins::AiThinker); // Set camera pins for AiThinker module
-cfg.setResolution(Resolution::find(640, 480)); // Resolution for faster capture
-#### Server Configuration
-Replace the server IP and endpoint in the sendImageToServer() function with the actual IP address and endpoint where the server is running:
-http.begin("http://YOUR_SERVER_IP/image");
-#### Pin Assignments
-Ultrasonic Sensor: trigPin is connected to pin 12, echoPin to pin 13.
-Servo Motor: servoPin is connected to pin 15.
-Brushless Motor (ESC): Controlled via pin 14.
-#### Camera Initialization
-The ESP32-CAM is initialized in the setup() function using the AiThinker module. You can modify the camera configuration as needed.
-## Usage
+1. **Install the Arduino IDE** with ESP32 board support.
+2. **Install libraries** — unzip `esp32cam-main.zip` into `Documents/Arduino/libraries/`. You also need `WiFi.h`, `HTTPClient.h`, `ESP32Servo.h`, and `ArduinoJson.h` from the Library Manager.
+3. **Configure Wi-Fi** in the sketch:
+   ```cpp
+   static const char* WIFI_SSID = "YOUR_SSID";
+   static const char* WIFI_PASS = "YOUR_PASSWORD";
+   ```
+4. **Configure the classifier endpoint** in `sendImageToServer()`:
+   ```cpp
+   http.begin("http://YOUR_SERVER_IP/image");
+   ```
+5. Select the correct board (AiThinker ESP32-CAM), upload, and open the Serial Monitor at 115200 baud for debug logs.
 
-Power the ESP32: Ensure the ESP32 is powered and connected to your Wi-Fi network.
-Detection and Action: The system will:
-Monitor the distance using the ultrasonic sensor.
-If an object is detected within the range (0-10 cm), the servo will open the bin, and an image will be captured.
-The image is sent to the server for material classification.
-Based on the response (paper/cardboard, plastic, or glass), the brushless motor will move the bin to the corresponding sector.
-Debugging: Use the serial monitor to view system status and any error messages.
-## Example Workflow
+---
 
-The ultrasonic sensor detects an object close to the bin (distance < 10 cm).
-The camera captures an image, which is sent to the server for material classification.
-The server returns the predicted material (e.g., "plastic").
-Based on the material, the brushless motor moves the bin to the appropriate sector.
-The servo motor opens and closes the bin.
-## Known Issues
+## Runtime flow
 
-The first image captured by the camera is discarded and not sent to the server.
-Ensure that the server is up and running and can handle POST requests with image data.
-## Additional Information
-The repository includes a ZIP file containing the necessary libraries for the ESP32.
-#### To use these libraries:
-Unzip the file.
-Place the unzipped libraries in Documents -> Arduino -> libraries.
-All coding and development for this project were done using the Arduino IDE.
+1. Ultrasonic sensor detects an object `< 10 cm`.
+2. Servo opens the lid.
+3. Camera captures a frame (the first frame on boot is intentionally discarded to avoid auto-exposure artifacts).
+4. Frame is sent as an HTTP POST to the Flask backend.
+5. Response (`plastic` / `glass` / `paper/cardboard`) drives the brushless motor to the corresponding sector.
+6. Servo closes the lid; system returns to idle.
+
+---
+
+## Known issues
+
+- The first camera capture after boot is discarded — auto-exposure has not settled yet.
+- The backend must be online and reachable on the same Wi-Fi network before the ESP32 can classify.
+
+---
+
+## Team
+
+Integration 3 — Team 11 (Sortify).
